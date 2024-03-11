@@ -1,0 +1,118 @@
+---
+title: "Homework 1"
+author: "Bahadır Yüzlü"
+date: "r"
+format: 
+  html:
+      toc: true
+      embed-resources: true
+editor: visual
+---
+
+```{r, include=FALSE}
+library(nycflights13)
+library(tidyverse)
+```
+
+## 5.2.4 Exercises
+
+In that block I will try to answer some exercises about filter() function from dplyr basics.
+
+```{r}
+# Part A
+# Understanding the column names
+nycflights13::flights %>% names()
+flights <- nycflights13::flights
+flights
+# 1) Flights that have 2 or more hours arrival delay
+latecomers <-filter(flights,arr_delay>=120)
+latecomers
+# 2) Flights heading towards Houston
+IAHHOU <- filter(flights, dest == "HOU" | dest == "IAH")
+IAHHOU
+# 3) Flights that are operated by United, American or Delta,(United->UA,Delta->DL,American->AA)
+corps<- filter (flights, carrier=="UA"|carrier =="DL"|carrier =="AA")
+corps
+# 4) Flights departed in summer
+summerflights<- filter(flights, month==6|month==7|month==8)
+summerflights
+# 5) Arrived more than 2 hours late but did not leave late
+latecomers2 <- filter(latecomers, dep_delay<=0)
+latecomers2
+# 6) Flights that were delayed by at least an hour but made up over 30 minutes
+delayed_flights <- filter(flights, dep_delay>=60 & dep_delay-arr_delay >= 30)
+delayed_flights
+# 7) Flights departed btw 12.00 and 6.00 (inc)
+early_morning_flights <- filter(flights, hour>=6 & hour <= 12)
+early_morning_flights
+
+# Part B
+# In question 4 and 7 I could use between() function
+# 4) Flights departed in summer
+summerflights<- filter(flights, between(month,7,9))
+summerflights
+# 7) Flights departed btw 12.00 and 6.00 (inc)
+early_morning_flights <- filter(flights, between(hour,6,12))
+early_morning_flights
+
+# Part C
+# 3) How many flights have a missing dep_time? What other variables are missing? What might these rows represent?
+# While I am investigating the situation, I realized that there are 4 missing rows at the end of day one. And when ı checked the scheduled departure/arrival times, I understood that these would be the cancelled flights because they have been scheduled in the middle of the day.
+# According to that, it is safe to say that in 2013, there were 8255 cancelled flights in that airport.
+sum(is.na(flights$dep_time))
+
+
+# Part D
+# It is general rule for 0 base, and NA goes with it.
+NA^0
+# According to that, When the result relies on the NA, it gives NA. However, If there is a strong argument on one side-it is True for or relation and false for and relation- NA does not affect the result and goes with it.
+NA|TRUE
+NA|FALSE
+NA&FALSE
+```
+
+## 5.3.1 Exercises
+
+In that block I will try to answer some exercises about arrange() function from dplyr basics.
+
+```{r}
+# Part A
+# 2) Sort flights to find the most delayed flights. Find the flights that left earliest.
+arrange(flights,desc(dep_delay))
+# Because built-in function does ascending ordering
+arrange(flights,dep_delay)
+# 3) Sort flights to find the fastest (highest speed) flights.
+flights<-mutate(flights, speed = distance/air_time)
+arrange(flights, desc(speed))
+# 4) Which flights traveled the farthest? Which traveled the shortest?
+# Farthest first
+arrange(flights,desc(distance))
+# Nearest first
+arrange(flights,distance)
+```
+
+## 5.6.7 Exercises
+
+```{r}
+# 5) Which carrier has the worst delays? Challenge: can you disentangle the effects of bad airports vs. bad carriers? Why/why not? (Hint: think about flights %>% group_by(carrier, dest) %>% summarise(n()))
+arrange(flights, desc(arr_delay))
+# Answer appears to be "HA"
+xe <- flights %>%  group_by(carrier, dest) %>% summarise(n=n(),delay = mean(arr_delay, na.rm = TRUE))
+ggplot(data=xe,mapping = aes(x = n, y = delay))+
+    geom_point(alpha = 1/10)
+```
+
+## 5.7.1 Exercises
+
+```{r}
+# 2) Which plane (tailnum) has the worst on-time record?
+# I will calculate on-time record by mean departure times.
+flights %>% group_by(tailnum) %>% filter(dep_delay > 0) %>% summarise(delay= mean(dep_delay)) %>% arrange(desc(delay))
+
+# 3) What time of day should you fly if you want to avoid delays as much as possible?
+flights <- filter(flights, is.na(dep_delay)!=1)
+flights
+flights %>% group_by(hour) %>% summarise(delay = mean(dep_delay)) %>% arrange(delay)
+```
+
+The answer appears to be 5.00 AM.
