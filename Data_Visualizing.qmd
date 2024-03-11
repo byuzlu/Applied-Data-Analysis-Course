@@ -1,0 +1,276 @@
+---
+title: "Homework 2"
+author: "Bahadır Yüzlü"
+date: "r"
+format: 
+  html:
+      toc: true
+      embed-resources: true
+editor: visual
+---
+
+IE451 Homework 2
+
+```{r, include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(ISLR2)
+library(ggplot2)
+library(pander)
+library(car)
+```
+
+## Questions 9
+
+This exercise involves the Auto data set studied in the lab. Make sure that the missing values have been removed from the data.
+
+```{r}
+#removing missing values
+data(Auto,package= "ISLR2")
+head(Auto)
+```
+
+### SubQuestion a
+
+Which of the predictors are quantitative, and which are qualitative?
+
+```{r}
+str(Auto)
+```
+
+According to the data, qualitative predictors are name,year and origin. On the other hand, remaining ones are numerical and therefore quantitative.
+
+### SubQuestion b
+
+What is the range of each quantitative predictor? You can answer this using the range() function.
+
+```{r}
+mpg <- Auto %>% select(mpg)
+cylinders<-Auto %>% select(cylinders)
+displacement<-Auto %>% select(displacement)
+horsepower<-Auto %>% select(horsepower)
+weight<-Auto %>% select(weight)
+acceleration<-Auto %>% select(acceleration)
+
+tribble(
+  ~range, ~mpg, ~cylinder,~hp,~displ,~weight,~accelerate,
+  #--|--|----
+  "min", range(mpg)[1],range(cylinders)[1],range(horsepower)[1],range(displacement)[1],range(weight)[1],range(acceleration)[1],
+  "max", range(mpg)[2],range(cylinders)[2],range(horsepower)[2],range(displacement)[2],range(weight)[2],range(acceleration)[2],
+)
+```
+
+### SubQuestion c
+
+What is the mean and standard deviation of each quantitative predictor?
+
+```{r}
+auto_tib <- as_tibble(Auto)
+mpg_mean <- mean(auto_tib$mpg,na.rm=TRUE)
+cylinder_mean <- mean(auto_tib$cylinders,na.rm=TRUE)
+hp_mean <- mean(auto_tib$horsepower,na.rm=TRUE)
+displ_mean <- mean(auto_tib$displacement,na.rm=TRUE)
+weight_mean <- mean(auto_tib$weight,na.rm=TRUE)
+accelerate_mean<-mean(auto_tib$acceleration,na.rm=TRUE)
+mpg_sd <- sd(auto_tib$mpg,na.rm=TRUE)
+cylinder_sd <- sd(auto_tib$cylinders,na.rm=TRUE)
+hp_sd <- sd(auto_tib$horsepower,na.rm=TRUE)
+displ_sd <- sd(auto_tib$displacement,na.rm=TRUE)
+weight_sd <- sd(auto_tib$weight,na.rm=TRUE)
+accelerate_sd<-sd(auto_tib$acceleration,na.rm=TRUE)
+
+tribble(
+  ~info, ~mpg, ~cylinder,~hp,~displ,~weight,~accelerate,
+  #--|--|----
+  "mean", mpg_mean,cylinder_mean,hp_mean,displ_mean,weight_mean,accelerate_mean,
+  "std dev", mpg_sd,cylinder_sd,hp_sd,displ_sd,weight_sd,accelerate_sd
+)
+```
+
+### SubQuestion d
+
+Now remove the 10th through 85th observations. What is the range, mean, and standard deviation of each predictor in the subset of the data that remains?
+
+```{r}
+auto_tib <- auto_tib %>% filter(!row_number() %in% 10:85 )
+
+mpg <- auto_tib %>% select(mpg)
+cylinders<-auto_tib %>% select(cylinders)
+displacement<-auto_tib %>% select(displacement)
+horsepower<-auto_tib%>% select(horsepower)
+weight<-auto_tib %>% select(weight)
+acceleration<-auto_tib %>% select(acceleration)
+
+tribble(
+  ~range, ~mpg, ~cylinder,~hp,~displ,~weight,~accelerate,
+  #--|--|----
+  "min", range(mpg)[1],range(cylinders)[1],range(horsepower)[1],range(displacement)[1],range(weight)[1],range(acceleration)[1],
+  "max", range(mpg)[2],range(cylinders)[2],range(horsepower)[2],range(displacement)[2],range(weight)[2],range(acceleration)[2]
+)
+
+mpg_mean <- mean(auto_tib$mpg,na.rm=TRUE)
+cylinder_mean <- mean(auto_tib$cylinders,na.rm=TRUE)
+hp_mean <- mean(auto_tib$horsepower,na.rm=TRUE)
+displ_mean <- mean(auto_tib$displacement,na.rm=TRUE)
+weight_mean <- mean(auto_tib$weight,na.rm=TRUE)
+accelerate_mean<-mean(auto_tib$acceleration,na.rm=TRUE)
+mpg_sd <- sd(auto_tib$mpg,na.rm=TRUE)
+cylinder_sd <- sd(auto_tib$cylinders,na.rm=TRUE)
+hp_sd <- sd(auto_tib$horsepower,na.rm=TRUE)
+displ_sd <- sd(auto_tib$displacement,na.rm=TRUE)
+weight_sd <- sd(auto_tib$weight,na.rm=TRUE)
+accelerate_sd<-sd(auto_tib$acceleration,na.rm=TRUE)
+
+tribble(
+  ~info, ~mpg, ~cylinder,~hp,~displ,~weight,~accelerate,
+  #--|--|----
+  "mean", mpg_mean,cylinder_mean,hp_mean,displ_mean,weight_mean,accelerate_mean,
+  "std dev", mpg_sd,cylinder_sd,hp_sd,displ_sd,weight_sd,accelerate_sd)
+```
+
+### SubQuestion e
+
+Using the full data set, investigate the predictors graphically, using scatterplots or other tools of your choice. Create some plots highlighting the relationships among the predictors. Comment on your findings.
+
+First, we should investigate the scatterplot matrix, to visualize the relation between predictors. At first glance, displacement seemed a precise measure for cars. Potential predictors to that measure would be weight, year and hp.
+
+```{r}
+scatterplotMatrix(~displacement + weight + year + horsepower,data = Auto,)
+```
+
+According to that graph, we can say that there is a clear connection between displacement and horsepower, because related graphics almost construct a linear line. However, year appear to be the worst predictor to estimate anything because its graphics are nearly homogeneous. Despite having such a balanced density (the best among the predictors ı choose), its functionality is debatable. For further investigation, I will look into my claims deeply, I claimed that there is a strong relation between horsepower and displacement.
+
+```{r}
+Auto %>% ggplot() +
+  geom_point(mapping = aes(x = horsepower, y = displacement, color = year))
+```
+
+As it can be seen in the graph, on upper right corner there are few points that represents older cars with high horsepower. That could point out a temporary fashion in cars. However, on lower left of the graph seems to be more accurate in terms of sample size. Mentioning this, there are colors from every tone, meaning that year is not a good predictor. However,a linear line is visisble which represents a potential relation between displacement and HP. \### SubQuestion f Suppose that we wish to predict gas mileage (mpg) on the basis of the other variables. Do your plots suggest that any of the other variables might be useful in predicting mpg? Justify your answer. Knowing that mpg stands for fuel consumption measure, it could depend on weight and HP.
+
+```{r}
+scatterplotMatrix(~mpg + weight + year + horsepower,data = Auto,)
+```
+
+According to scatter plots, there could be a relation between mpg and HP. In addition there could be a relation between mpg and weight. As it can be seen in the graph, there is is a fluent linear line in related scatter plots. On contrarily, year fails one more time. Despite the notion that mpg technologies improved during the time, the data demonstrates a homogeneous behavior.
+
+## Questions 10
+
+This exercise involves the Boston housing data set.
+
+### SubQuestion a
+
+To begin, load in the Boston data set. The Boston data set is part of the ISLR2 library.
+
+```{r}
+data(Boston, package = "ISLR2")
+Boston %>% head()
+```
+
+### SubQuestion b
+
+Make some pairwise scatterplots of the predictors (columns) in this data set. Describe your findings. To start, I want to figure out how is tax rating responding with respect to nitrogen oxide concentration and river accessibility, because as far as I know, nitrogen oxide is a manufacturing indicator and factories are located near rivers.
+
+```{r}
+ggplot(data = Boston) + 
+  geom_point(mapping = aes(x = nox, y = tax, color = chas))+
+  geom_smooth(mapping = aes(x = nox, y = tax))
+```
+
+According to the plot, It can be said that there could be a relation between tax rates and nitrogen oxide, because if we neglect the outlier, the smoother demonstrates a comparably stable increase. However, river accessibility predictor's affect seems ambigious due to the lack of data.
+
+### SubQuestion c
+
+Are any of the predictors associated with per capita crime rate? If so, explain the relationship.
+
+At first glance, I wanted to investigate the relation between crime rates and Education (ptratio), job opportunities. Therefore, I decided to work on that scatterplot. To see the relation much better, I transformed the data into log.
+
+```{r}
+scatterplot(log(crim) ~ dis, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+scatterplot(log(crim) ~ ptratio, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+```
+
+To have a better grab on the data, I used log values of crime rates. In first plot, it is easy to see the clear relation between employment center distances and crime rates. Despite my expectation, it seems crime rates are much higher in wealthy districts. On the other hand, there is no clear relation between ptratio and crime rates. Therefore, it could be neglected.
+
+### SubQuestion d
+
+Do any of the census tracts of Boston appear to have particularly high crime rates? Tax rates? Pupil-teacher ratios? Comment on the range of each predictor.
+
+```{r}
+ggplot(Boston, aes(x=crim)) + 
+  geom_histogram()
+ggplot(Boston, aes(x=tax)) + 
+  geom_histogram()
+ggplot(Boston, aes(x=ptratio)) + 
+  geom_histogram()
+summary(Boston)
+```
+
+```{r}
+#According to the data, nearly %2.1 of the Boston population living in a district where crime rate is above 25%
+crit_crime_dist <- Boston %>% filter(crim>25) %>% count()
+total_dist <- Boston %>% nrow()
+crit_crime_dist/total_dist
+```
+
+```{r}
+#According to the data, nearly %27 of the Boston population paying 600$ tax.
+crit_tax_dist <- Boston %>% filter(tax>600) %>% count()
+total_dist <- Boston %>% nrow()
+crit_tax_dist/total_dist
+```
+
+```{r}
+#According to the data, nearly %40 of the Boston has a 20 or more pupil-teacher ratio. On the other hand this value decreases to %3.5, when the ratio increases to 21 or more.
+crit_ptratio_dist <- Boston %>% filter(ptratio>20) %>% count()
+total_dist <- Boston %>% nrow()
+crit_ptratio_dist/total_dist
+crit_ptratio_dist <- Boston %>% filter(ptratio>21) %>% count()
+total_dist <- Boston %>% nrow()
+crit_ptratio_dist/total_dist
+
+```
+
+### SubQuestion e
+
+How many of the census tracts in this data set bound the Charles river?
+
+```{r}
+Boston %>% filter(chas == 1) %>% count()
+```
+
+### SubQuestion f
+
+What is the median pupil-teacher ratio among the towns in this data set?
+
+```{r}
+summary(Boston$ptratio)[3]
+```
+
+### SubQuestion g
+
+Which census tract of Boston has lowest median value of owner occupied homes? What are the values of the other predictors for that census tract, and how do those values compare to the overall ranges for those predictors? Comment on your findings.
+
+```{r}
+#Lowest Medv rows
+least_medv<-Boston[order(Boston$medv),]
+least_medv[1,]
+#Answer is suburb 399
+summary(Boston)
+```
+
+In terms of crime rate, suburb 399 is above the majority of the Boston. Nitrogen oxide level is also alerting with respect to other parts of the Boston. This district is very close to the employment centers. And this district is very accessible to radial highways. Tax rates seems as expected, considering the nitrogen oxide levels etc.
+
+### SubQuestion h
+
+In this data set, how many of the census tracts average more than seven rooms per dwelling? More than eight rooms per dwelling? Comment on the census tracts that average more than eight rooms per dwelling.
+
+```{r}
+Boston %>% filter(rm>7) %>% count()
+Boston %>% filter(rm>8) %>% count()
+
+ggplot(Boston, aes(x=rm)) + 
+  geom_density()
+Boston %>% filter(rm>8) %>% summary()
+```
+
+As it can be seen in the summary, these 13 census tracts' characteristics does not vary too much from each other. Because, having 8 rooms per dwelling on average is creating a very deterministic result. These places has a considerable amount of job opportunities, low crime rates etc. All in all, These places are wealthy.
