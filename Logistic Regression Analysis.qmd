@@ -1,0 +1,178 @@
+---
+title: "Homework 4"
+author: "Bahadır Yüzlü"
+date: "r"
+format: 
+  html:
+      toc: true
+      embed-resources: true
+editor: visual
+---
+
+IE451 Homework 4
+
+```{r, include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(ISLR2)
+library(ggplot2)
+library(pander)
+library(car)
+```
+
+## Question 6
+
+### A
+#### Estimate the probablity that a student who studies for 40h and has an undergrad GPA of 3.5 gets an A in the class.
+
+We suppose that we have a model. According to the logistic regression, 
+$$
+\text{p}(X_1,X_2) = \frac{e^{\beta_0 + \beta_1X_1 + \beta_2X_2 }}{1+e^{\beta_0 + \beta_1X_1 + \beta_2X_2}}
+$$
+Then by equalizing 
+$$\beta_0 = -6, \beta_1 =0.05, \beta_2 = 1  $$
+We got
+$$\text{p}(X_1,X_2) = \frac{e^{-6 + 0.05X_1 + X_2}}{1+e^{-6 + 0.05X_1 + X_2}} $$
+$$\text{Then finding for a sample } X_1 = 40 \text{ and } X_2 = 3.5 $$
+$$\text{p}(40,3.5) = \frac{e^{-6 + 0.05*40 + 3.5}}{1+e^{-6 + 0.05*40 + 3.5}} $$
+Then we can say that 
+$$\frac{e^{-0.5}}{1+e^{-0.5}}= \frac{0.606}{1.606} = 0.377 $$
+
+### B
+#### How many hours would the student in part(a) need to study to have a 50% chance of A.
+
+The model is the same, so we can use the odd version of the model for computation easiness.
+
+
+$$
+\log(\frac{\text{p}(X_1,3.5)}{1-\text{p}(X_1,3.5)}) = -6 + 0.05X_1 + 3.5
+$$
+$$
+\frac{\text{p}(X_1,3.5)}{1-\text{p}(X_1,3.5)} = 1
+$$
+Then we need to adjust the study hour to equalize the system. 
+$$
+\log{1} = -6 + 0.05X_1 + 3.5
+$$
+Meaning that;
+$$
+X_1 = 50
+$$
+That student should work 50 hours to increase his/her chance up to 50%.
+
+## Question 9
+
+### A
+
+#### On Average, what fraction of people with an odds of 0.37 of defaulting on their credit card payment will in fact default?
+
+First, we need to construct our logistic model to represent the model. 
+
+```{r}
+d <- ISLR2::Default
+glmod <- glm(default ~ student + balance, data = d, family = binomial)
+summary(glmod)
+coefficients(glmod)
+```
+We can construct the model;
+$$
+\log(odd) = \beta_0 + \beta_1X_1 + \beta_2X_2
+$$
+$$
+\beta_0 = -10.7494, \beta_1 = -0.715, \beta_2 = 0.0057 
+$$
+If odd is 37%,
+$$
+\frac{\text{p}(X_1,X_2)}{1-\text{p}(X_1,X_2)} = 0.37
+$$
+p is appear to be;
+$$
+\text{p}(X_1,X_2) = \frac{37}{137} = 0.27
+$$
+Then we should look which of the observations have a prediction probability of 0.27 (I used a %5 interval).
+```{r}
+possible_default <- d %>%
+  mutate(phat = fitted(glmod)) %>% 
+  filter(0.2565<phat) %>% 
+  filter(phat<0.2835)
+possible_default
+```
+And finally how many of them are defaulted in fact.
+
+```{r}
+sum(possible_default$default == "Yes")
+```
+The answer is 7 out of 35.
+
+### B 
+
+#### Suppose that an individual has a 16% chance of defaulting on her credit card payment. What are the odds that she will default. 
+
+$$
+\text{p}(X_1,X_2) = \frac{16}{116} = 0.1379
+$$
+
+## Question 12
+
+### A
+
+#### What is the log odds of orange versus apple in your model?
+$$
+\log(odd) = \beta_0 + \beta_1X_1 
+$$
+
+### B
+
+#### What is the log odds of orange versus apple in your friend's model?
+
+$$
+\log(odd) = (\alpha_{orange,0}-\alpha_{apple,0}) +(\alpha_{orange,1}-\alpha_{apple,1})X_1
+$$
+
+### C
+
+#### What are the coefficient estimates in your friend's model?
+
+For my model,
+$$
+\log(odd) = 2 - X_1 
+$$
+
+To equalize them,
+
+$$
+2 - X  = (\alpha_{orange,0}-\alpha_{apple,0}) +(\alpha_{orange,1}-\alpha_{apple,1})X_1
+$$
+Then it could be said that coefficient estimates are following;
+
+$$
+\alpha_{orange,0}-\alpha_{apple,0} = 2
+$$
+$$
+\alpha_{orange,1}-\alpha_{apple,1} = -1
+$$
+
+### D
+
+#### What are the coefficients in your model?
+
+$$
+\log(odd) = (1.2-3) +(-2-0.6)X_1 = (-2.06)X_1 - 1.8
+$$
+Then to fit my model into that, I arrange my estimators like following;
+
+$$
+\beta_0 = -1.8, \beta_1 =-2.06  
+$$
+
+### E
+
+#### Finally, what friction of time do you expect agreement between the 2 model?  
+
+Actually, just equalizing odd logarithm to determine estimators does not make the two model so alike. Therefore, I expect a low agreement situation between the two.
+
+
+
+
+
+
