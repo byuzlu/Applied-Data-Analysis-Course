@@ -1,0 +1,240 @@
+---
+title: "Homework 3"
+author: "Bahadır Yüzlü"
+date: "r"
+format: 
+  html:
+      toc: true
+      embed-resources: true
+editor: visual
+---
+IE451 Homework 2
+
+```{r, include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(ISLR2)
+library(ggplot2)
+library(pander)
+library(car)
+```
+
+## Questions 9
+### A
+####Produce a scatterplot matrix which includes all of tge variables in the data set. 
+```{r}
+dat <- Auto
+scatterplotMatrix(~mpg+cylinders+displacement+horsepower+weight+acceleration+year+origin+name,data =dat,)
+```
+### B 
+#### Compute the matrix of correlations between the variables using cor() function.
+```{r}
+dat_noname <- dat %>% select(-name)
+dcor <- cor(x = dat_noname,use = "everything",method =c("pearson","kendall","spearman"))
+dcor
+```
+
+### C
+#### Use the lm() function to perform a multiple linear regression with mpg as the response and all other variables exceps name. Comment on the results.
+
+```{r}
+model1 <- lm(mpg~.-name,data=dat)
+model1 %>% summary()
+```
+Looking at the p-values of the linear model 1, it could be said that there is a possible relation between mpg and displacement, weight, year and origin since they have a p-value lesser than 0.05 which makes them significant. On the other hand, cylinders, horsepower and acceleration variables are not necessarily have a relationship with mpg. Specifically, year variable is one of the most likely predictors of mpg since it has the smallest p-value. Meaning that related null hypothesis which is claiming its predictor is equal to zero can be rejected with confidence.
+
+### D 
+#### Use the plot() function to produce diagnostic plots of the linear regression fit. Comment on any problems you see with the fit. Do the residual plots suggest any unusually large outliers? Any observations with high leverages?
+
+```{r}
+plot(model1)
+```
+
+To discuss overall fit of model1, we can start with the residual plot. At first glance, it is possible to see a U shape however a line is the ideal. Overall it is not that bad of a shape, however with the information gathered from q-q plot and scale-location plot 323,326 and 327 samples can be counted as outliers. In leverage plot, it could be said that no point exceed the cook's distance line and therefore the plot has no high leverage point. However, there is a sample 14 which goes further than any other points. This could mean something so, we should remember this point. Overall, the extreme samples are not notable. 
+
+
+### E
+#### Use the * and : symbols to fit linear regression with interaction effects. Do any of these statistically significant?
+```{r}
+model2 <- lm(mpg~.+year:weight-name,data=dat)
+model3 <- lm(mpg~.+year*origin-name,data=dat)
+model4 <- lm(mpg~.+weight*origin-name,data=dat)
+summary(model2)
+summary(model3)
+summary(model4)
+```
+
+
+To look into interactions, I decided to work with individually significant predictor's combinations. All of them appear to be significant predictors since their p-values are less than 0.05.
+
+### F
+#### Try a few different transformations of the cariables, such as log and powers. Comment on your findings.
+
+Because I got the biggest R-square from the first model(model2), I used it as a starting point in this example. Since, adjusted R-square value indicates the representation rate of the linear model.  
+```{r}
+symbox(~ weight, dat, powers = c(-2, -0.5, 0, 0.5, 2))
+```
+According to symbox(), logarithmic transformation comes in handy. Therefore we take the logarithm of weight.
+```{r}
+model5<- lm(mpg~.+year:weight-weight-name+log(weight),data=dat)
+summary(model5)
+```
+
+## Questions 10
+### A
+#### Fit a multiple regression model to predict sales using price, urban and US.
+```{r}
+model6 <- lm(Sales~Price+Urban+US, data=Carseats)
+summary(model6)
+```
+### B
+#### Provide an interpretation of each coefficient in the model.
+In this model, we see that there are 2 binary values namely, Urban and US. Therefore our model has created 2 dummy variables and predictors. Among them, Urban variable does not seem suitable to predict sales because of its p-value. There is a chance that Urban's predictor's coefficient is zero. The coefficient of Price and US makes some sense after all. There should be a clear relationship between price and sales. And US performs well in terms of market conditions.
+
+### C
+#### Provide an interpretation of each coefficient in the model.
+$$
+sales_i = 13.043 -0.0544 Price_i -0.0219 Urban(yes)_i + 1.2 US(yes)_i
+$$
+```{r}
+attach(Carseats)
+contrasts(Urban)
+contrasts(US)
+```
+
+In this model, I used dummy variables. In case of Urban variable is 1, meaning that the market is in an urban area, the model has a -0.0219 contribution. However, if it is not in an urban area, this part turn out to be no negative contribution to sales. It is valid for the US aswell.
+
+### D
+#### For which of the predictors can you reject the null hypothesis?
+I reject the null hypothesis for price and US predictors because their p-values are less than 0.05.Therefore, their effect on sales could not be zero as it is indicated in the null hypothesis.
+
+
+### E
+#### Fit a smaller model that only uses predictors that there is evidence of association.
+
+```{r}
+model7<- lm(Sales~Price+US, data=Carseats)
+summary(model7)
+```
+
+### F
+#### Fit a smaller model that only uses predictors that there is evidence of association.
+In my opinion, they are very bad models that requires more work. Because their adjusted R-squares are too low. Which is indicating that these are not fitting the sample. 
+```{r}
+anova(model7,model6)
+```
+Since p-value of F-test is large (>0.05), small model looks as good as the full model. Therefore we cannot reject the null hypothesis. However, that means no progression is made.
+
+### G
+#### Using the model from e, obtain 95%confidence intervals for the coefficients.
+```{r}
+confint(model7,level = 0.95)
+```
+
+### H
+#### Is there evidence of outliers or high leverage observations in the model from e?
+```{r}
+plot(model7)
+```
+
+There is no such evidence of neither outliers nor high leverage points.
+
+## Questions 15
+
+### A
+#### For each predictor, fit a simple linear regression model to predict the response.Which of them is valuable? Create some plots to back up your assertations.
+```{r}
+Boston %>%names()
+model8<- lm(crim~ zn, data=Boston)
+model9<-lm(crim~ indus, data=Boston)
+model10<-lm(crim~ chas, data=Boston)
+model11<-lm(crim~ nox, data=Boston)
+model12<-lm(crim~ rm, data=Boston)
+model13<-lm(crim~ age, data=Boston)
+model14<-lm(crim~ dis, data=Boston)
+model15<-lm(crim~ rad, data=Boston)
+model16<-lm(crim~ tax, data=Boston)
+model17<-lm(crim~ ptratio, data=Boston)
+model18<-lm(crim~ lstat, data=Boston)
+model19<-lm(crim~ medv, data=Boston)
+summary(model8)
+summary(model9)
+summary(model10)
+summary(model11)
+summary(model12)
+summary(model13)
+summary(model14)
+summary(model15)
+summary(model16)
+summary(model17)
+summary(model18)
+summary(model19)
+```
+According to the models, individually, zn, indus, crim, rm, age, dis, rad, tax, ptratio, lstat, medv can be said to have a relation with the crime rate. 
+
+```{r}
+scatterplot(log(crim) ~ dis, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+scatterplot(log(crim) ~ zn, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+
+scatterplot(log(crim) ~ ptratio, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+
+scatterplot(log(crim) ~ indus, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+
+scatterplot(log(crim) ~ tax, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+
+scatterplot(log(crim) ~ rad, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+
+scatterplot(log(crim) ~ lstat, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+
+scatterplot(log(crim) ~ rm, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+
+scatterplot(log(crim) ~ age, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+
+scatterplot(log(crim) ~ medv, data = Boston,  regLine = FALSE, smooth = list(spread = FALSE, lty.smooth = "solid"))
+```
+
+As it can be seen in the scatterplots, except for ptratio and medv there is a clear relation between other variables and crime rates.
+
+### B
+#### Fit a multiple regression model to predict the response using all of the predictors. Describe your results. For which predictors can we reject the null hypothesis?
+```{r}
+model20<-lm(crim~ ., data=Boston)
+summary(model20)
+```
+Despite we had a lot of valuable predictors individually, in aggregate model, 4 significant variables manages to make a valuable predictor(p<0.05) namely, zn, dis, rad, medv. In this case, we can reject null hypothesis for them because they clearly related to crime rate. 
+
+### C
+#### How do your results from a compare to your results from b? Create a plot displaying the univariate regression coefficients from a on x axis and the multiple regression coefficients on the y axis. 
+
+```{r}
+x<-c(coef(model8)[2],coef(model9)[2],coef(model10)[2],coef(model11)[2],coef(model12)[2],coef(model13)[2],coef(model14)[2],
+     coef(model15)[2],coef(model16)[2],coef(model17)[2],coef(model18)[2],coef(model19)[2])
+y<-coef(model20)[-1]
+plot(x,y)
+```
+There is a considerable amount of difference between the two coefficients of predictors. 
+
+### D
+#### Is there avidence of non-linear association between any of the predictors and the response?
+To test non-linearity, I am going to apply a very simple way to directly extend the linear model
+to accommodate non-linear relationships, using polynomial regression. And I am going to apply it to 4 variables namely, zn, dis, rad and medv.
+```{r}
+model21<-lm(crim~ zn + I(zn^2) + I(zn^3), data=Boston)
+model22<-lm(crim~ dis + I(dis^2) + I(dis^3), data=Boston)
+model23<-lm(crim~ rad + I(rad^2)+I(rad^3), data=Boston)
+model24<-lm(crim~ I(medv^2) + I(medv^3), data=Boston)
+summary(model21)
+summary(model22)
+summary(model23)
+summary(model24)
+```
+
+It is possible to say that non-linear representation has done well compared to the individual simple regressions. In most of the variables above, there are some improvements in adjusted R-square numbers. And nearly all of the predictors were significant. However, exceptionally, in rad variable, none of the predictors are significant and they are likely to be 0. Despite having such big representation value, the model needs a little improvement and/or explanation.   
+
+
+
+
+
+
+
+
