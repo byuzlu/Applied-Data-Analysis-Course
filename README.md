@@ -6,12 +6,9 @@ Welcome to the repository for the coursework of the Introduction to Exploratory 
 This course covers a wide range of topics, including:
 - Exploratory Data Analysis (EDA)
 - Multivariate Regression
-- Semiparametric Regression
 - Scatterplot Smoothing
 - Linear Mixed Models
 - Generalized Linear Models (GLMs)
-- Recursive Partitioning
-- Hidden Markov Models (HMMs)
 
 ## Applications
 The course emphasizes practical applications in diverse domains, such as:
